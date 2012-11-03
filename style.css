@@ -1,0 +1,74 @@
+html {
+  min-width: 1040px;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  margin: 1em auto 4em auto;
+  position: relative;
+  width: 960px;
+}
+
+h1 {
+  font-size: 64px;
+  font-weight: 300;
+  letter-spacing: -2px;
+  margin: .3em 0 .1em 0;
+}
+
+div h1 {
+	position: inherit;
+	padding: 20px 50px;
+	background: #F4D6BC;
+	color: #294052;
+}
+
+.slider-container {
+	width: 240px;
+	margin: 10px 30px;
+	position: relative;
+	margin-left: 400px;
+	float: right;
+	text-align: right;
+}
+.all-sliders {
+	float: right
+	position: right;
+	margin-bottom:-400px;
+	text-align: right;
+}
+
+.label {
+	margin: 20px;
+	color: #447294;
+}
+
+.background {
+  fill: #fff;
+  stroke: #aaa;
+  stroke-width: 1.5px;
+  pointer-events: none;
+}
+
+#states {
+  fill: #aaa;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.highlight {
+  fill: #8FBCDB;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+
+#states .active {
+  fill: #8FBCDB;
+}
+
+#circles {
+  fill: steelblue;
+  fill-opacity: .8;
+  stroke: #fff;
+}

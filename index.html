@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<script src="d3.v2.min.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="https://raw.github.com/jaz303/tipsy/master/src/javascripts/jquery.tipsy.js"></script>
+	<script type="text/javascript" src="http://gist.github.com/raw/1373263/34f826d990985e1352491538184128b78bf34c03/jquery.tipsy.js"></script>
+	<script type="text/javascript" src="jquery.tipsy.js"></script>
+	<link rel="stylesheet" href="http://jqueryui.com/web-base-template/themes/jqueryui.com/style.css" />
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
+	<script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+	
+	<link rel="stylesheet" href="tipsy.css" type="text/css" />
+	<link rel="stylesheet" href="style.css" type="text/css" /> 
+
+<div><h1>The Costs of Living, 2010</h1></div>  
+	 
+</head>
+
+<body>
+<div class="graph">
+<script type="text/javascript">
+
+// 1a) states are defined here 
+var width = 670,
+    height = 400,
+    centered;
+
+var projection = d3.geo.albersUsa()
+    .scale(width)
+    .translate([0, 0]);
+    
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+    
+svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+    .on("click", click);  
+      
+var g = svg.append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+  .append("g")
+    .attr("id", "states");
+    
+
+
+//1b) states are now plotted
+var map = d3.json("readme.json", function(json) {
+	g.selectAll("path")
+	  .data(json.features)
+	.enter().append("path")
+	  .attr("d", path)
+	  .on("click", click)
+	  .classed("active", false)
+	  .on("mouseover", function() { d3.select(d3.event.target).classed("highlight", true); })
+	  .on("mouseout", function() { d3.select(d3.event.target).classed("highlight", false); });	
+});
+
+
+// 2a) define cities here
+var circles = svg.append("svg:g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+  .append("svg:g")
+    .attr("id", "circles")
+    .on("click",click);
+    
+// 2b) define empty arrays to house csv columns
+var City = [];
+var Lat = [];
+var Long = [];
+var CompositeIndex = [];
+var GroceryItems = [];
+var Housing = [];
+var Utilities = [];
+var Transportation = [];
+var HealthCare = []
+var longLat = {"type": "FeatureCollection", "features":[]};
+
+// 2c) takes csv file, stores each column into arrays above, and we'll eventually concactenate them into objects in dataSet
+d3.csv("living.csv", function(cities)
+{
+	var dataEnter = d3.select("body").data(cities).enter();
+	dataEnter.append("span").html(function(d)
+	{
+  	City.push(d["City"]);
+  	Lat.push(parseFloat(d["Lat"]));
+  	Long.push(parseFloat(d["Long"]));
+  	CompositeIndex.push(parseFloat(d["CompositeIndex"]));
+  	GroceryItems.push(parseFloat(d["GroceryItems"]));
+  	Housing.push(parseFloat(d["Housing"]));
+  	Utilities.push(parseFloat(d["Utilities"]));
+  	Transportation.push(parseFloat(d["Transportation"]));
+  	HealthCare.push(parseFloat(d["HealthCare"]));
+	});
+
+
+  // 2d) stores longitude and latitude in recogniznable GEOjson format, and other variables within Features object
+  for (var i = 0; i < City.length; i++) {
+  	var obj = {
+  				type: "Point",
+  				coordinates: [Long[i],Lat[i]],
+  				City: [City[i]],
+  				CompositeIndex: CompositeIndex[i],
+    			GroceryItems: GroceryItems[i],
+    			Housing: Housing[i],
+    			Utilities: Utilities[i],
+    			Transportation: Transportation[i],
+    			HealthCare: HealthCare[i],
+    			Status: 1
+  					};
+  				
+  	longLat["features"].push(obj);
+  }
+  // 2f) check to make sure objects stored correctly (comment out later)
+/*   console.log(longLat["features"]); */
+  
+  // 2g) Plots cities on map
+  circles.selectAll("path")
+      .data(longLat.features)
+    .enter().insert("a")
+    .append("path")
+      .attr("d", path);
+      
+ // 2h) gives hover states
+
+var hover = function() {
+	$('g>a').tipsy({ 
+		    gravity: 'w', 
+		    html: true, 
+		    title: function() {
+		          var d = this.__data__;
+		          var a = d["City"];
+		          var b = d["CompositeIndex"];
+		          var c = d["Housing"];
+		          var e = d["GroceryItems"];
+		          var f = d["Utilities"];
+		          var g = d["Transportation"];
+		          var h = d["HealthCare"];
+		        if (d.Status>0) {
+		          return "<b>" + a + "</b>" + "<br>" + "Composite Index: " + b + "<br>" + "Housing Costs: " + c + "<br>" + "Grocery Costs: " + e + "<br>" + "Utilities Costs: " + f + "<br>" + "Transportation Costs: " + g + "<br>" + "Healthcare Costs: " + h;
+		    }
+		    else {return "<div" + " class" + "=" + "escape" + ">" + "</div>"}
+		  }});};
+hover();
+		  
+// 5) define sliders for different categories
+
+		// Global filter variables
+		var comp_min = 80,
+				comp_max = 190,
+				groc_min = 70,
+				groc_max = 170,
+				house_min = 60,
+				house_max = 320,
+				util_min = 70,
+				util_max = 200,
+				trans_min = 80,
+				trans_max = 150,
+				health_min = 80,
+				health_max = 150;
+				
+		// Predicate for filtering a single data point
+		function isOutOfRange(d) {
+			return d.CompositeIndex < comp_min || d.CompositeIndex > comp_max
+					|| d.GroceryItems < groc_min || d.GroceryItems > groc_max
+					|| d.Housing < house_min || d.Housing > house_max
+					|| d.Utilities < util_min || d.Utilities > util_max
+					|| d.Transportation < trans_min || d.Transportation > trans_max
+					|| d.HealthCare < health_min || d.HealthCare > health_max;
+		}
+
+    $(function() {
+        $("#slider-comp").slider({
+            range: true,
+            min: 80,
+            max: 190,
+            values: [80, 190],
+            slide: function(event, ui) {
+            	// Update category filters
+            	comp_min = ui.values[0];
+            	comp_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-comp").text("Composite Index: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-comp").text("Composite Index: " + $("#slider-comp").slider("values", 0) +
+            " - " + $("#slider-comp").slider("values", 1));
+    });
+
+    $(function() {
+        $("#slider-groc").slider({
+            range: true,
+            min: 70,
+            max: 170,
+            values: [70, 170],
+            slide: function(event, ui) {
+            	// Update category filters
+            	groc_min = ui.values[0];
+            	groc_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-groc").text("Grocery Items: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-groc").text("Grocery Items: " + $("#slider-groc").slider("values", 0) +
+            " - " + $("#slider-groc").slider("values", 1));
+    });
+   
+    $(function() {
+        $("#slider-house").slider({
+            range: true,
+            min: 60,
+            max: 320,
+            values: [60, 320],
+            slide: function(event, ui) {
+            	// Update category filters
+            	house_min = ui.values[0];
+            	house_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-house").text("Housing: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-house").text("Housing: " + $("#slider-house").slider("values", 0) +
+            " - " + $("#slider-house").slider("values", 1));
+    });
+    
+    $(function() {
+        $("#slider-util").slider({
+            range: true,
+            min: 70,
+            max: 200,
+            values: [70, 200],
+            slide: function(event, ui) {
+            	// Update category filters
+            	util_min = ui.values[0];
+            	util_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-util").text("Utilities: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-util").text("Utilities: " + $("#slider-util").slider("values", 0) +
+            " - " + $("#slider-util").slider("values", 1));
+    });
+    
+    $(function() {
+        $("#slider-trans").slider({
+            range: true,
+            min: 80,
+            max: 150,
+            values: [80, 150],
+            slide: function(event, ui) {
+            	// Update category filters
+            	trans_min = ui.values[0];
+            	trans_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-trans").text("Transportation: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-trans").text("Transportation: " + $("#slider-trans").slider("values", 0) +
+            " - " + $("#slider-trans").slider("values", 1));
+    });
+    
+    $(function() {
+        $("#slider-health").slider({
+            range: true,
+            min: 80,
+            max: 150,
+            values: [80, 150],
+            slide: function(event, ui) {
+            	// Update category filters
+            	health_min = ui.values[0];
+            	health_max = ui.values[1];
+            	// Filter on all global filters
+            	var allPaths = circles.selectAll("path");
+            	allPaths.style("opacity",1).filter(function(d) {
+            			 d.Status = 1;
+/*             			console.log(d.Status); */
+            			})
+            			.on("mouseover",hover());
+            	allPaths.filter(isOutOfRange).style("opacity", 0).filter(function(d){
+            		d.Status = 0;
+            		})
+            		.on("mouseover",hover());
+            	// Dynamically update indicator text
+              $("#label-health").text("Health Care: " + ui.values[0] + " - " + ui.values[1]);
+            }
+        });
+        // Initialize indicator text
+        $("#label-health").text("Health Care: " + $("#slider-health").slider("values", 0) +
+            " - " + $("#slider-health").slider("values", 1));
+    });
+
+
+}); /* close main body of code */
+
+
+// 4) here we have our zoom function
+function click(d) {
+  var x = 0,
+      y = 0,
+      k = 1;
+
+  if (d && centered !== d) {
+    var centroid = path.centroid(d);
+    x = -centroid[0];
+    y = -centroid[1];
+    k = 3;
+    centered = d;
+  } else {
+    centered = null;
+  }
+
+  g.selectAll("path")
+      .classed("active", centered && function(d) { return d === centered; });
+  g.transition()
+      .duration(1000)
+      .attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
+      .style("stroke-width", 1.5 / k + "px");
+      
+  circles.selectAll("path")
+      .classed("active", centered && function(d) { return d === centered; });
+  circles.transition()
+      .duration(1000)
+      .attr("transform", "scale(" + k + ")translate(" + x + "," + y + ")")
+      .attr("id","circles")
+      .style("stroke-width", 1 / k + "px")
+}
+
+
+
+</script>
+</div>
+
+<div class="all-sliders" style="text-align: right"></div> 	
+
+<div class="slider-container" style="text:align: right">
+In each of these categories, the national average is 100.
+</div>
+
+<div class="slider-container">
+	<span class="label" id="label-comp">Composite Index: </span>
+	<div class="slider" id="slider-comp"></div>
+</div>
+<div class="slider-container">
+	<span class="label" id="label-groc">Grocery Costs: </span>
+	<div class="slider" id="slider-groc"></div>
+</div>
+<div class="slider-container">
+	<span class="label" id="label-house">Housing Costs: </span>
+	<div class="slider" id="slider-house"></div>
+</div>
+<div class="slider-container">
+	<span class="label" id="label-util">Utilities Costs: </span>
+	<div class="slider" id="slider-util"></div>
+</div>
+<div class="slider-container">
+	<span class="label" id="label-trans">Transportation Costs : </span>
+	<div class="slider" id="slider-trans"></div>
+</div>
+<div class="slider-container">
+	<span class="label" id="label-health">Healthcare Costs: </span>
+	<div class="slider" id="slider-health"></div>
+</div>
+
+
+</body>
+</html>

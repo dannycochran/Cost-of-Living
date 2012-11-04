@@ -4,10 +4,7 @@
 	<meta charset="utf-8">
 	<script src="d3.v2.min.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
-	<script type="text/javascript" src="https://raw.github.com/jaz303/tipsy/master/src/javascripts/jquery.tipsy.js"></script>
-	<script type="text/javascript" src="http://gist.github.com/raw/1373263/34f826d990985e1352491538184128b78bf34c03/jquery.tipsy.js"></script>
 	<script type="text/javascript" src="jquery.tipsy.js"></script>
-	<link rel="stylesheet" href="http://jqueryui.com/web-base-template/themes/jqueryui.com/style.css" />
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
 	<script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 	
@@ -146,7 +143,7 @@ var hover = function() {
 		        if (d.Status>0) {
 		          return "<b>" + a + "</b>" + "<br>" + "Composite Index: " + b + "<br>" + "Housing Costs: " + c + "<br>" + "Grocery Costs: " + e + "<br>" + "Utilities Costs: " + f + "<br>" + "Transportation Costs: " + g + "<br>" + "Healthcare Costs: " + h;
 		    }
-		    else {return "<div" + " class" + "=" + "escape" + ">" + "</div>"}
+		    else {return "<b>" + a + "</b>" + "<br>" + "Not in current selection";}
 		  }});};
 hover();
 		  
